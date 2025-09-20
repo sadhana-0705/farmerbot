@@ -68,17 +68,30 @@ Always provide practical, actionable advice suitable for Indian farming conditio
 # Initialize LLM Chat
 async def get_ai_response(message: str, session_id: str, language: str = "english") -> str:
     try:
+        # Enhanced language detection
+        contains_malayalam = any(char in message for char in 'അആഇഈഉഊഋഌഎഏഐഒഓഔകഖഗഘങചഛജഝടതഥദധനപഫബഭമയരലവശഷസഹളഴറ')
+        
+        # Force Malayalam response if Malayalam detected in message OR if language is set to Malayalam
+        use_malayalam = language.lower() == "malayalam" or contains_malayalam
+        
         # Create system message based on language
         system_message = AGRICULTURAL_KNOWLEDGE
         
-        if language.lower() == "malayalam":
-            system_message += "\n\nIMPORTANT: The user is asking in Malayalam. You MUST respond primarily in Malayalam language. Use Malayalam script for your main response. You can include English terms in brackets for clarity, but the primary response should be in Malayalam. Be helpful and respectful in Malayalam."
+        if use_malayalam:
+            system_message += """
+
+CRITICAL INSTRUCTION FOR MALAYALAM RESPONSE:
+- You MUST respond ONLY in Malayalam language 
+- Use proper Malayalam script (മലയാളം) for the entire response
+- Do NOT write in English except for proper nouns like PM-KISAN
+- Write government scheme names in Malayalam: പിഎം-കിസാൻ (PM-KISAN)
+- Use respectful Malayalam (സാധുവായ മലയാളം)
+- The user wants Malayalam responses, so give complete Malayalam answers
+- Example format: "പിഎം-കിസാൻ പദ്ധതി എന്നത് ചെറുകർഷകർക്കുള്ള ഒരു സർക്കാർ പദ്ധതിയാണ്..."
+
+DO NOT MIX ENGLISH AND MALAYALAM - RESPOND ONLY IN MALAYALAM."""
         else:
-            system_message += "\n\nThe user is asking in English. Respond in English but feel free to include some Malayalam terms in brackets to help with local understanding."
-        
-        # Add user's message context to help with language detection
-        if any(char in message for char in 'അആഇഈഉഊഋഌഎഏഐഒഓഔകഖഗഘങചഛജഝടതഥദധനപഫബഭമയരലവശഷസഹളഴറ'):
-            system_message += "\n\nDETECTED: User message contains Malayalam text. Respond in Malayalam."
+            system_message += "\n\nThe user is asking in English. Respond in English with some Malayalam terms in brackets to help with local understanding."
         
         chat = LlmChat(
             api_key=os.environ.get('EMERGENT_LLM_KEY'),
