@@ -248,13 +248,6 @@ const KisanVani = () => {
     }
   };
 
-  const switchLanguage = (lang) => {
-    setCurrentLanguage(lang);
-    SpeechRecognition.stopListening();
-    resetTranscript();
-    toast.success(`Language switched to ${lang === 'malayalam' ? 'മലയാളം' : 'English'}`);
-  };
-
   const content = {
     english: {
       title: "Kisan Vani",
