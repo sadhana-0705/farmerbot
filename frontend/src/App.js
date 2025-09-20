@@ -160,7 +160,7 @@ const KisanVani = () => {
 
       setChatHistory(prev => [...prev.filter(msg => msg.id !== tempUserMsg.id), aiMessage]);
       
-      // Enhanced Text-to-speech for AI response
+      // Enhanced Text-to-speech for AI response with better Malayalam support
       if ('speechSynthesis' in window) {
         // Stop any ongoing speech
         window.speechSynthesis.cancel();
@@ -169,22 +169,65 @@ const KisanVani = () => {
         
         // Configure voice settings based on detected language
         if (detectedLanguage === 'malayalam') {
-          utterance.lang = 'ml-IN';
-          utterance.rate = 0.7; // Slower for Malayalam
-          utterance.pitch = 1.0;
+          // Enhanced Malayalam voice configuration
+          utterance.rate = 0.6; // Slower for Malayalam comprehension
+          utterance.pitch = 1.1; // Slightly higher pitch for Malayalam
+          utterance.volume = 0.9;
           
-          // Try to find Malayalam voice
-          const voices = window.speechSynthesis.getVoices();
-          const malayalamVoice = voices.find(voice => 
-            voice.lang.includes('ml') || voice.lang.includes('hi') || voice.name.includes('Hindi')
-          );
-          if (malayalamVoice) {
-            utterance.voice = malayalamVoice;
+          // Try multiple fallback options for Malayalam voice
+          window.speechSynthesis.onvoiceschanged = () => {
+            const voices = window.speechSynthesis.getVoices();
+            console.log('Available voices for Malayalam:', voices.map(v => `${v.name} (${v.lang})`));
+            
+            // Priority order for Malayalam voice selection
+            const malayalamVoice = voices.find(voice => 
+              voice.lang === 'ml-IN' || voice.lang === 'ml'
+            ) || voices.find(voice => 
+              voice.lang === 'hi-IN' || voice.lang === 'hi'
+            ) || voices.find(voice => 
+              voice.name.toLowerCase().includes('malayalam')
+            ) || voices.find(voice => 
+              voice.name.toLowerCase().includes('hindi')
+            ) || voices.find(voice => 
+              voice.lang.startsWith('ta') // Tamil as closer alternative
+            );
+            
+            if (malayalamVoice) {
+              utterance.voice = malayalamVoice;
+              utterance.lang = malayalamVoice.lang;
+              console.log('Selected voice for Malayalam:', malayalamVoice.name, malayalamVoice.lang);
+            } else {
+              // Fallback to Hindi or default voice
+              utterance.lang = 'hi-IN';
+              console.log('No Malayalam voice found, using Hindi fallback');
+            }
+          };
+          
+          // Trigger voice loading if not already loaded
+          if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.getVoices();
+          } else {
+            // Voices already loaded, select immediately
+            const voices = window.speechSynthesis.getVoices();
+            const malayalamVoice = voices.find(voice => 
+              voice.lang === 'ml-IN' || voice.lang === 'ml'
+            ) || voices.find(voice => 
+              voice.lang === 'hi-IN' || voice.lang === 'hi'
+            );
+            
+            if (malayalamVoice) {
+              utterance.voice = malayalamVoice;
+              utterance.lang = malayalamVoice.lang;
+            } else {
+              utterance.lang = 'hi-IN';
+            }
           }
         } else {
+          // English voice configuration
           utterance.lang = 'en-US';
           utterance.rate = 0.8;
           utterance.pitch = 1.0;
+          utterance.volume = 0.9;
           
           // Try to find English voice
           const voices = window.speechSynthesis.getVoices();
@@ -198,11 +241,25 @@ const KisanVani = () => {
         
         utterance.onerror = (event) => {
           console.error('Speech synthesis error:', event);
+          const errorMsg = detectedLanguage === 'malayalam' 
+            ? 'ശബ്ദം പ്ലേ ചെയ്യാൻ കഴിഞ്ഞില്ല' 
+            : 'Could not play audio';
+          toast.error(errorMsg);
         };
         
+        utterance.onend = () => {
+          console.log('Speech synthesis completed');
+        };
+        
+        // Add delay to ensure voice is properly loaded
         setTimeout(() => {
-          window.speechSynthesis.speak(utterance);
-        }, 100);
+          try {
+            window.speechSynthesis.speak(utterance);
+            console.log('Started speech synthesis');
+          } catch (error) {
+            console.error('Failed to start speech synthesis:', error);
+          }
+        }, 200);
       }
       
     } catch (error) {
