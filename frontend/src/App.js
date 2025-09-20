@@ -60,6 +60,45 @@ const KisanVani = () => {
     }
   }, [transcript]);
 
+  // Initialize voices when component mounts
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      // Load voices
+      const loadVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+      };
+      
+      // Load voices immediately if available
+      loadVoices();
+      
+      // Load voices when they become available
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  // Improved language switching with voice feedback
+  const switchLanguage = (lang) => {
+    setCurrentLanguage(lang);
+    SpeechRecognition.stopListening();
+    resetTranscript();
+    
+    const successMessage = lang === 'malayalam' 
+      ? 'മലയാളത്തിലേക്ക് മാറ്റി' 
+      : 'Language switched to English';
+    toast.success(successMessage);
+    
+    // Voice feedback for language switch
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(successMessage);
+      utterance.lang = lang === 'malayalam' ? 'ml-IN' : 'en-US';
+      utterance.rate = 0.8;
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 500);
+    }
+  };
+
   const loadFAQ = async () => {
     try {
       const response = await axios.get(`${API}/faq/${currentLanguage}`);
