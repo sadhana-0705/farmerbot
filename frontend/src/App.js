@@ -433,12 +433,28 @@ const KisanVani = () => {
                   {chatHistory.length === 0 && (
                     <div className="text-center py-8">
                       <Bot className="w-12 h-12 mx-auto text-green-500 mb-4" />
-                      <p className="text-gray-600">
-                        {currentLanguage === 'english' 
-                          ? "Hello! I'm Kisan Vani. Ask me anything about farming, crops, or government schemes."
-                          : "ഹലോ! ഞാൻ കിസാൻ വാണിയാണ്. കൃഷി, വിളകൾ, സർക്കാർ പദ്ധതികൾ എന്നിവയെക്കുറിച്ച് എന്തും ചോദിക്കൂ."
-                        }
-                      </p>
+                      <div className="space-y-3">
+                        <p className="text-gray-800 font-medium">
+                          {currentLanguage === 'english' 
+                            ? "Hello! I'm Kisan Vani, your AI assistant for farming."
+                            : "നമസ്കാരം! ഞാൻ കിസാൻ വാണിയാണ്, നിങ്ങളുടെ കൃഷി AI സഹായി."
+                          }
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          {currentLanguage === 'english' 
+                            ? "Ask me anything about farming, crops, pest management, fertilizers, or government schemes."
+                            : "കൃഷി, വിളകൾ, കീടനാശിനികൾ, വളങ്ങൾ, സർക്കാർ പദ്ധതികൾ എന്നിവയെക്കുറിച്ച് എന്തും ചോദിക്കൂ."
+                          }
+                        </p>
+                        <div className="flex justify-center space-x-2 mt-4">
+                          <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                            {currentLanguage === 'english' ? '🎤 Voice Support' : '🎤 ശബ്ദ പിന്തുണ'}
+                          </div>
+                          <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                            {currentLanguage === 'english' ? '🌾 Agricultural Expert' : '🌾 കൃഷി വിദഗ്ധൻ'}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                   
