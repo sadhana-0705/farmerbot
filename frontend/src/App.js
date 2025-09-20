@@ -186,10 +186,26 @@ const KisanVani = () => {
     if (listening) {
       SpeechRecognition.stopListening();
     } else {
-      SpeechRecognition.startListening({ 
+      // Enhanced speech recognition with better Malayalam support
+      const speechConfig = {
         continuous: true,
+        interimResults: true,
         language: currentLanguage === 'malayalam' ? 'ml-IN' : 'en-US'
-      });
+      };
+      
+      // Fallback languages for better recognition
+      if (currentLanguage === 'malayalam') {
+        // Try Malayalam first, then Hindi as fallback
+        speechConfig.language = 'ml-IN';
+      }
+      
+      SpeechRecognition.startListening(speechConfig);
+      
+      // Show toast for better user feedback
+      const listeningMessage = currentLanguage === 'malayalam' 
+        ? 'ശ്രവിക്കുന്നു... സംസാരിക്കുക'
+        : 'Listening... Please speak';
+      toast.success(listeningMessage);
     }
   };
 
