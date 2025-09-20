@@ -281,6 +281,10 @@ const KisanVani = () => {
   const toggleListening = () => {
     if (listening) {
       SpeechRecognition.stopListening();
+      const stopMessage = currentLanguage === 'malayalam' 
+        ? 'ശ്രവണം നിർത്തി' 
+        : 'Stopped listening';
+      toast.info(stopMessage);
     } else {
       // Enhanced speech recognition with better Malayalam support
       const speechConfig = {
@@ -289,19 +293,28 @@ const KisanVani = () => {
         language: currentLanguage === 'malayalam' ? 'ml-IN' : 'en-US'
       };
       
-      // Fallback languages for better recognition
+      // Enhanced Malayalam speech recognition
       if (currentLanguage === 'malayalam') {
-        // Try Malayalam first, then Hindi as fallback
         speechConfig.language = 'ml-IN';
+        // Add additional configuration for Malayalam
+        speechConfig.maxAlternatives = 3;
       }
       
-      SpeechRecognition.startListening(speechConfig);
-      
-      // Show toast for better user feedback
-      const listeningMessage = currentLanguage === 'malayalam' 
-        ? 'ശ്രവിക്കുന്നു... സംസാരിക്കുക'
-        : 'Listening... Please speak';
-      toast.success(listeningMessage);
+      try {
+        SpeechRecognition.startListening(speechConfig);
+        
+        // Show toast for better user feedback
+        const listeningMessage = currentLanguage === 'malayalam' 
+          ? 'ശ്രവിക്കുന്നു... മലയാളത്തിൽ സംസാരിക്കുക'
+          : 'Listening... Please speak in English';
+        toast.success(listeningMessage);
+      } catch (error) {
+        console.error('Speech recognition error:', error);
+        const errorMessage = currentLanguage === 'malayalam'
+          ? 'ശബ്ദം തിരിച്ചറിയാൻ കഴിഞ്ഞില്ല'
+          : 'Voice recognition failed';
+        toast.error(errorMessage);
+      }
     }
   };
 
