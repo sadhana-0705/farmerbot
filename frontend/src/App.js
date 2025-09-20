@@ -85,6 +85,10 @@ const KisanVani = () => {
     setIsLoading(true);
     const userMessage = messageText.trim();
     
+    // Auto-detect language based on message content
+    const containsMalayalam = /[\u0D00-\u0D7F]/.test(userMessage);
+    const detectedLanguage = containsMalayalam ? 'malayalam' : currentLanguage;
+    
     // Add user message to chat immediately
     const tempUserMsg = {
       id: `temp_${Date.now()}`,
@@ -102,7 +106,7 @@ const KisanVani = () => {
       const response = await axios.post(`${API}/chat`, {
         message: userMessage,
         session_id: sessionId,
-        language: currentLanguage
+        language: detectedLanguage
       });
 
       // Add AI response to chat
@@ -111,22 +115,63 @@ const KisanVani = () => {
         message: userMessage,
         response: response.data.response,
         timestamp: response.data.timestamp,
-        isUser: false
+        isUser: false,
+        language: detectedLanguage
       };
 
       setChatHistory(prev => [...prev.filter(msg => msg.id !== tempUserMsg.id), aiMessage]);
       
-      // Text-to-speech for AI response
+      // Enhanced Text-to-speech for AI response
       if ('speechSynthesis' in window) {
+        // Stop any ongoing speech
+        window.speechSynthesis.cancel();
+        
         const utterance = new SpeechSynthesisUtterance(response.data.response);
-        utterance.lang = currentLanguage === 'malayalam' ? 'ml-IN' : 'en-US';
-        utterance.rate = 0.8;
-        window.speechSynthesis.speak(utterance);
+        
+        // Configure voice settings based on detected language
+        if (detectedLanguage === 'malayalam') {
+          utterance.lang = 'ml-IN';
+          utterance.rate = 0.7; // Slower for Malayalam
+          utterance.pitch = 1.0;
+          
+          // Try to find Malayalam voice
+          const voices = window.speechSynthesis.getVoices();
+          const malayalamVoice = voices.find(voice => 
+            voice.lang.includes('ml') || voice.lang.includes('hi') || voice.name.includes('Hindi')
+          );
+          if (malayalamVoice) {
+            utterance.voice = malayalamVoice;
+          }
+        } else {
+          utterance.lang = 'en-US';
+          utterance.rate = 0.8;
+          utterance.pitch = 1.0;
+          
+          // Try to find English voice
+          const voices = window.speechSynthesis.getVoices();
+          const englishVoice = voices.find(voice => 
+            voice.lang.includes('en-US') || voice.lang.includes('en')
+          );
+          if (englishVoice) {
+            utterance.voice = englishVoice;
+          }
+        }
+        
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+        };
+        
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance);
+        }, 100);
       }
       
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again.');
+      const errorMessage = currentLanguage === 'malayalam' 
+        ? 'സന്ദേശം അയയ്ക്കാൻ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.'
+        : 'Failed to send message. Please try again.';
+      toast.error(errorMessage);
       setChatHistory(prev => prev.filter(msg => msg.id !== tempUserMsg.id));
     } finally {
       setIsLoading(false);
