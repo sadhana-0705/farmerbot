@@ -70,8 +70,15 @@ async def get_ai_response(message: str, session_id: str, language: str = "englis
     try:
         # Create system message based on language
         system_message = AGRICULTURAL_KNOWLEDGE
+        
         if language.lower() == "malayalam":
-            system_message += "\n\nPlease respond in Malayalam when appropriate, especially for local terms and explanations."
+            system_message += "\n\nIMPORTANT: The user is asking in Malayalam. You MUST respond primarily in Malayalam language. Use Malayalam script for your main response. You can include English terms in brackets for clarity, but the primary response should be in Malayalam. Be helpful and respectful in Malayalam."
+        else:
+            system_message += "\n\nThe user is asking in English. Respond in English but feel free to include some Malayalam terms in brackets to help with local understanding."
+        
+        # Add user's message context to help with language detection
+        if any(char in message for char in 'അആഇഈഉഊഋഌഎഏഐഒഓഔകഖഗഘങചഛജഝടതഥദധനപഫബഭമയരലവശഷസഹളഴറ'):
+            system_message += "\n\nDETECTED: User message contains Malayalam text. Respond in Malayalam."
         
         chat = LlmChat(
             api_key=os.environ.get('EMERGENT_LLM_KEY'),
@@ -84,7 +91,10 @@ async def get_ai_response(message: str, session_id: str, language: str = "englis
         return response
     except Exception as e:
         logging.error(f"Error getting AI response: {e}")
-        return "I'm sorry, I'm having trouble processing your request right now. Please try again."
+        if language.lower() == "malayalam":
+            return "ക്ഷമിക്കണം, ഇപ്പോൾ നിങ്ങളുടെ ചോദ്യം പ്രോസസ്സ് ചെയ്യാൻ പ്രശ്നമുണ്ട്. ദയവായി വീണ്ടും ശ്രമിക്കുക."
+        else:
+            return "I'm sorry, I'm having trouble processing your request right now. Please try again."
 
 # Define Models
 class ChatMessage(BaseModel):
